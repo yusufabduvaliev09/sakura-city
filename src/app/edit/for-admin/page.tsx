@@ -1,7 +1,10 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import type { MenuItem } from "@/lib/models";
 
 const CATEGORY_OPTIONS = [
@@ -49,14 +52,20 @@ export default function HiddenAdminPage() {
   const [imageFile, setImageFile] = useState<File | null>(null);
 
   useEffect(() => {
+    if (!supabase) {
+      setIsAuthLoading(false);
+      return;
+    }
+    const client: SupabaseClient = supabase;
+
     async function checkSession() {
-      const { data } = await supabase.auth.getSession();
+      const { data } = await client.auth.getSession();
       setIsAuthed(Boolean(data.session));
       setIsAuthLoading(false);
     }
-    checkSession();
+    void checkSession();
 
-    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data } = client.auth.onAuthStateChange((_event, session) => {
       setIsAuthed(Boolean(session));
     });
     return () => data.subscription.unsubscribe();
@@ -77,6 +86,7 @@ export default function HiddenAdminPage() {
   }
 
   const loadItems = useCallback(async () => {
+    if (!supabase) return;
     setIsLoadingItems(true);
     setAdminError(null);
     const { data, error } = await supabase
@@ -95,12 +105,13 @@ export default function HiddenAdminPage() {
   }, []);
 
   useEffect(() => {
-    if (!isAuthed) return;
+    if (!isAuthed || !supabase) return;
     loadItems();
   }, [isAuthed, loadItems]);
 
   async function handleLogin(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!supabase) return;
     setAuthError(null);
 
     const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -113,10 +124,14 @@ export default function HiddenAdminPage() {
   }
 
   async function handleLogout() {
+    if (!supabase) return;
     await supabase.auth.signOut();
   }
 
   async function uploadImage(file: File): Promise<{ image_url: string; image_path: string }> {
+    if (!supabase) {
+      throw new Error("Supabase не настроен");
+    }
     const ext = file.name.split(".").pop() || "jpg";
     const fileName = `${Date.now()}-${crypto.randomUUID()}.${ext}`;
     const path = `menu/${fileName}`;
@@ -134,6 +149,7 @@ export default function HiddenAdminPage() {
 
   async function handleAddItem(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!supabase) return;
     setIsSaving(true);
     setAdminError(null);
     try {
@@ -173,6 +189,7 @@ export default function HiddenAdminPage() {
   }
 
   async function handleDeleteItem(item: MenuItem) {
+    if (!supabase) return;
     setIsDeletingId(item.id);
     setAdminError(null);
     try {
@@ -202,6 +219,14 @@ export default function HiddenAdminPage() {
     () => (isAuthed ? "Скрытая админка меню" : "Вход в скрытую админку"),
     [isAuthed],
   );
+
+  if (!isSupabaseConfigured() || supabase === null) {
+    return (
+      <main className="flex min-h-[100svh] items-center justify-center bg-black text-zinc-300">
+        Настройка конфигурации...
+      </main>
+    );
+  }
 
   if (isAuthLoading) {
     return (

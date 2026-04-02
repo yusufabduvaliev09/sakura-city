@@ -31,6 +31,12 @@ export default function Home() {
     async function fetchItems() {
       setIsLoading(true);
       setError(null);
+      if (!supabase) {
+        setError("Настройка конфигурации...");
+        setIsLoading(false);
+        return;
+      }
+
       const { data, error: fetchError } = await supabase
         .from("menu_items")
         .select("*")
