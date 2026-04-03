@@ -3,7 +3,10 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { DEFAULT_MENU_CATEGORIES } from "@/lib/menu-categories";
+import {
+  firstDefaultCategoryWithItems,
+  isDefaultMenuCategory,
+} from "@/lib/menu-categories";
 import type { MenuItem } from "@/lib/models";
 
 function HomeContent() {
@@ -43,31 +46,28 @@ function HomeContent() {
     fetchItems();
   }, []);
 
-  const categories = useMemo(() => {
-    const dynamic = Array.from(
-      new Set(items.map((item) => item.category).filter(Boolean)),
-    );
-
-    if (dynamic.length === 0) return [...DEFAULT_MENU_CATEGORIES];
-    return dynamic;
-  }, [items]);
+  const defaultWhenNoUrl = useMemo(
+    () => firstDefaultCategoryWithItems(items),
+    [items],
+  );
 
   const selectedCategory = useMemo(() => {
-    if (categoryFromUrl && categories.includes(categoryFromUrl)) {
+    if (isDefaultMenuCategory(categoryFromUrl)) {
       return categoryFromUrl;
     }
-    return categories[0] ?? DEFAULT_MENU_CATEGORIES[0];
-  }, [categoryFromUrl, categories]);
+    return defaultWhenNoUrl;
+  }, [categoryFromUrl, defaultWhenNoUrl]);
 
   useEffect(() => {
-    if (isLoading || categories.length === 0) return;
-    if (!categoryFromUrl) {
+    if (isLoading) return;
+    const urlOk = isDefaultMenuCategory(categoryFromUrl);
+    if (!urlOk) {
       router.replace(
         `/?category=${encodeURIComponent(selectedCategory)}`,
         { scroll: false },
       );
     }
-  }, [isLoading, categories, categoryFromUrl, router, selectedCategory]);
+  }, [isLoading, categoryFromUrl, router, selectedCategory]);
 
   const filteredItems = items.filter((item) => item.category === selectedCategory);
 
@@ -87,40 +87,47 @@ function HomeContent() {
               <span className="text-sm text-zinc-400">{filteredItems.length} поз.</span>
             </div>
 
-            <section className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
-              {filteredItems.map((item) => (
-                <article
-                  key={item.id}
-                  className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900"
-                >
-                  <div className="aspect-square w-full overflow-hidden">
-                    {item.image_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={item.image_url}
-                        alt={item.name}
-                        className="h-full w-full object-cover"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="h-full w-full bg-zinc-800" />
-                    )}
-                  </div>
+            {filteredItems.length === 0 ? (
+              <p className="rounded-2xl border border-zinc-800 bg-zinc-900/60 px-4 py-10 text-center text-sm text-zinc-400">
+                В этой категории пока нет блюд
+              </p>
+            ) : (
+              <section className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
+                {filteredItems.map((item) => (
+                  <article
+                    key={item.id}
+                    className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900"
+                  >
+                    <div className="aspect-square w-full overflow-hidden">
+                      {item.image_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={item.image_url}
+                          alt={item.name}
+                          className="h-full w-full object-cover"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="h-full w-full bg-zinc-800" />
+                      )}
+                    </div>
 
-                  <div className="space-y-2 p-3">
-                    <h2 className="text-sm font-bold uppercase tracking-wide text-white md:text-base">
-                      {item.name}
-                    </h2>
-                    <p className="line-clamp-2 text-sm text-gray-400">
-                      {item.description}
-                    </p>
-                    <p className="text-lg font-bold text-rose-500">
-                      {item.price} <span className="text-sm font-medium">сом</span>
-                    </p>
-                  </div>
-                </article>
-              ))}
-            </section>
+                    <div className="space-y-2 p-3">
+                      <h2 className="text-sm font-bold uppercase tracking-wide text-white md:text-base">
+                        {item.name}
+                      </h2>
+                      <p className="line-clamp-2 text-sm text-gray-400">
+                        {item.description}
+                      </p>
+                      <p className="text-lg font-bold text-rose-500">
+                        {item.price}{" "}
+                        <span className="text-sm font-medium">сом</span>
+                      </p>
+                    </div>
+                  </article>
+                ))}
+              </section>
+            )}
           </>
         )}
       </div>
