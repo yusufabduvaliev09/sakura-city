@@ -20,7 +20,7 @@ export default function SiteHeader() {
     isHome && param && isDefaultMenuCategory(param) ? param : null;
 
   return (
-    <header className="sticky top-0 z-30 border-b border-zinc-800/90 bg-zinc-950/95 backdrop-blur-md">
+    <header className="relative z-10 border-b border-zinc-800/90 bg-black">
       {/* Верхняя строка: контакты по краям */}
       <div className="border-b border-zinc-800/60">
         <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:py-3">
@@ -54,18 +54,18 @@ export default function SiteHeader() {
         </div>
       </div>
 
-      {/* Центральный логотип */}
-      <div className="mx-auto flex max-w-7xl justify-center px-4 py-8 md:py-10">
+      {/* Центральный логотип (вектор 600×200, масштаб по высоте) */}
+      <div className="mx-auto flex max-w-7xl justify-center px-4 py-4 md:py-5">
         <Link
           href="/"
-          className="relative block h-32 w-full max-w-[min(92vw,22rem)] transition-opacity hover:opacity-95 sm:h-36 sm:max-w-[26rem] md:h-40 md:max-w-[32rem] lg:h-48 lg:max-w-[40rem]"
+          className="block h-20 w-auto max-w-full shrink-0 transition-opacity hover:opacity-90 md:h-24"
         >
           <Image
-            src="/logo.jpeg"
+            src="/sakura-city-logo.svg"
             alt="Sakura City"
-            fill
-            sizes="(max-width: 640px) 90vw, (max-width: 1024px) 32rem, 40rem"
-            className="object-contain object-center"
+            width={600}
+            height={200}
+            className="h-20 w-auto max-w-full object-contain object-center md:h-24"
             priority
           />
         </Link>
