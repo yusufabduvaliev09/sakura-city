@@ -1,31 +1,19 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { DEFAULT_MENU_CATEGORIES } from "@/lib/menu-categories";
 import type { MenuItem } from "@/lib/models";
 
-const DEFAULT_CATEGORIES = [
-  "Салаты",
-  "Супы",
-  "Воки",
-  "Горячие роллы",
-  "Мини роллы",
-  "Холодные роллы",
-  "Запечённые",
-  "Сеты",
-  "Пиццы",
-  "Закуски",
-  "Моти",
-  "Соусы",
-  "Горячие напитки",
-  "Напитки",
-];
+function HomeContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const categoryFromUrl = searchParams.get("category");
 
-export default function Home() {
   const [items, setItems] = useState<MenuItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeCategory, setActiveCategory] = useState(DEFAULT_CATEGORIES[0]);
 
   useEffect(() => {
     async function fetchItems() {
@@ -48,13 +36,7 @@ export default function Home() {
         return;
       }
 
-      const list = (data as MenuItem[]) ?? [];
-      setItems(list);
-
-      if (list.length > 0) {
-        const firstCategory = list[0]?.category;
-        if (firstCategory) setActiveCategory(firstCategory);
-      }
+      setItems((data as MenuItem[]) ?? []);
       setIsLoading(false);
     }
 
@@ -66,47 +48,32 @@ export default function Home() {
       new Set(items.map((item) => item.category).filter(Boolean)),
     );
 
-    if (dynamic.length === 0) return DEFAULT_CATEGORIES;
+    if (dynamic.length === 0) return [...DEFAULT_MENU_CATEGORIES];
     return dynamic;
   }, [items]);
 
-  const selectedCategory = categories.includes(activeCategory)
-    ? activeCategory
-    : (categories[0] ?? DEFAULT_CATEGORIES[0]);
+  const selectedCategory = useMemo(() => {
+    if (categoryFromUrl && categories.includes(categoryFromUrl)) {
+      return categoryFromUrl;
+    }
+    return categories[0] ?? DEFAULT_MENU_CATEGORIES[0];
+  }, [categoryFromUrl, categories]);
+
+  useEffect(() => {
+    if (isLoading || categories.length === 0) return;
+    if (!categoryFromUrl) {
+      router.replace(
+        `/?category=${encodeURIComponent(selectedCategory)}`,
+        { scroll: false },
+      );
+    }
+  }, [isLoading, categories, categoryFromUrl, router, selectedCategory]);
 
   const filteredItems = items.filter((item) => item.category === selectedCategory);
 
   return (
-    <div className="min-h-[100svh] bg-black text-white">
-      <header className="sticky top-0 z-20 border-b border-zinc-800 bg-black/95 backdrop-blur">
-        <div className="mx-auto w-full max-w-7xl px-4 py-4">
-          <p className="text-xs tracking-[0.2em] text-zinc-400">SAKURA CITY</p>
-          <h1 className="mt-1 text-2xl font-bold">Цифровое меню</h1>
-
-          <div className="mt-4 flex gap-2 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {categories.map((category) => {
-              const isActive = category === activeCategory;
-              return (
-                <button
-                  key={category}
-                  type="button"
-                  onClick={() => setActiveCategory(category)}
-                  className={[
-                    "shrink-0 rounded-full border px-4 py-2 text-sm transition",
-                    isActive
-                      ? "border-rose-500 bg-rose-500 text-white"
-                      : "border-zinc-700 bg-zinc-900 text-zinc-300",
-                  ].join(" ")}
-                >
-                  {category}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </header>
-
-      <main className="mx-auto w-full max-w-7xl px-4 py-6">
+    <div className="bg-black text-white">
+      <div className="mx-auto w-full max-w-7xl px-4 py-6">
         {isLoading ? (
           <p className="text-zinc-400">Загрузка меню...</p>
         ) : error ? (
@@ -114,7 +81,9 @@ export default function Home() {
         ) : (
           <>
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold uppercase tracking-wide">{selectedCategory}</h2>
+              <h1 className="text-lg font-semibold uppercase tracking-wide">
+                {selectedCategory}
+              </h1>
               <span className="text-sm text-zinc-400">{filteredItems.length} поз.</span>
             </div>
 
@@ -139,9 +108,9 @@ export default function Home() {
                   </div>
 
                   <div className="space-y-2 p-3">
-                    <h3 className="text-sm font-bold uppercase tracking-wide text-white md:text-base">
+                    <h2 className="text-sm font-bold uppercase tracking-wide text-white md:text-base">
                       {item.name}
-                    </h3>
+                    </h2>
                     <p className="line-clamp-2 text-sm text-gray-400">
                       {item.description}
                     </p>
@@ -154,8 +123,19 @@ export default function Home() {
             </section>
           </>
         )}
-      </main>
+      </div>
     </div>
   );
 }
 
+export default function Home() {
+  return (
+    <Suspense
+      fallback={
+        <div className="bg-black px-4 py-6 text-zinc-400">Загрузка меню...</div>
+      }
+    >
+      <HomeContent />
+    </Suspense>
+  );
+}
