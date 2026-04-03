@@ -33,7 +33,7 @@ export default function RootLayout({
       <body className="flex min-h-full flex-col bg-black text-white">
         <Suspense
           fallback={
-            <div className="h-16 border-b border-zinc-800 bg-black md:h-20" />
+            <div className="min-h-[14rem] border-b border-zinc-800 bg-zinc-950 md:min-h-[16rem]" />
           }
         >
           <SiteHeader />

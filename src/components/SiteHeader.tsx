@@ -20,73 +20,100 @@ export default function SiteHeader() {
     isHome && param && isDefaultMenuCategory(param) ? param : null;
 
   return (
-    <header className="sticky top-0 z-30 border-b border-zinc-800 bg-black/95 backdrop-blur">
-      <div className="mx-auto w-full max-w-7xl px-4 py-3">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:gap-5">
-          <div className="flex w-full items-center justify-between gap-4 md:w-auto md:shrink-0">
-            <Link
-              href="/"
-              className="relative block h-[4.75rem] w-[min(100%,19rem)] shrink-0 transition-opacity hover:opacity-90 sm:h-20 sm:w-80 md:h-[5.25rem] md:w-[24rem]"
+    <header className="sticky top-0 z-30 border-b border-zinc-800/90 bg-zinc-950/95 backdrop-blur-md">
+      {/* Верхняя строка: контакты по краям */}
+      <div className="border-b border-zinc-800/60">
+        <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:py-3">
+          <div className="flex min-w-0 flex-1 items-start gap-2 text-left text-xs text-zinc-300 sm:text-sm md:justify-start">
+            <span
+              className="mt-0.5 shrink-0 text-rose-500"
+              aria-hidden
             >
-              <Image
-                src="/logo.jpeg"
-                alt="Sakura City"
-                fill
-                sizes="(max-width: 768px) 320px, 384px"
-                className="object-contain object-left"
-                priority
-              />
-            </Link>
+              <LocationPinIcon className="h-4 w-4 sm:h-[1.125rem] sm:w-[1.125rem]" />
+            </span>
+            <span className="leading-snug">
+              Курманжан датка 605
+            </span>
+          </div>
 
+          <div className="flex shrink-0 justify-end sm:justify-end">
             <a
               href={WHATSAPP_HREF}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-zinc-700 bg-zinc-900 text-[#25D366] transition hover:border-rose-500/60 hover:bg-zinc-800 hover:text-[#2fe673] md:hidden"
-              aria-label="Написать в WhatsApp"
+              className="inline-flex items-center gap-2 rounded-full border border-zinc-700/80 bg-zinc-900/80 px-3 py-1.5 text-sm text-white transition hover:border-rose-500/50 hover:bg-zinc-800 hover:text-rose-50"
             >
-              <WhatsAppGlyph className="h-6 w-6" />
+              <span className="text-[#25D366]" aria-hidden>
+                <WhatsAppGlyph className="h-5 w-5" />
+              </span>
+              <span className="font-medium tabular-nums tracking-tight">
+                0555039030
+              </span>
             </a>
           </div>
-
-          {isHome ? (
-            <nav
-              className="min-w-0 flex-1 flex gap-2 overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-              aria-label="Категории меню"
-            >
-              {DEFAULT_MENU_CATEGORIES.map((category) => {
-                const isActive = activeCategory === category;
-                return (
-                  <Link
-                    key={category}
-                    href={`/?category=${encodeURIComponent(category)}`}
-                    scroll={false}
-                    className={[
-                      "shrink-0 rounded-full border px-3 py-2 text-sm transition md:px-4",
-                      isActive
-                        ? "border-rose-500 bg-rose-500 text-white"
-                        : "border-zinc-700 bg-zinc-900 text-zinc-300 hover:border-rose-500/50 hover:text-rose-100",
-                    ].join(" ")}
-                  >
-                    {category}
-                  </Link>
-                );
-              })}
-            </nav>
-          ) : null}
-
-          <a
-            href={WHATSAPP_HREF}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-full border border-zinc-700 bg-zinc-900 text-[#25D366] transition hover:border-rose-500/60 hover:bg-zinc-800 hover:text-[#2fe673] md:flex md:ml-auto"
-            aria-label="Написать в WhatsApp"
-          >
-            <WhatsAppGlyph className="h-6 w-6" />
-          </a>
         </div>
       </div>
+
+      {/* Центральный логотип */}
+      <div className="mx-auto flex max-w-7xl justify-center px-4 py-8 md:py-10">
+        <Link
+          href="/"
+          className="relative block h-32 w-full max-w-[min(92vw,22rem)] transition-opacity hover:opacity-95 sm:h-36 sm:max-w-[26rem] md:h-40 md:max-w-[32rem] lg:h-48 lg:max-w-[40rem]"
+        >
+          <Image
+            src="/logo.jpeg"
+            alt="Sakura City"
+            fill
+            sizes="(max-width: 640px) 90vw, (max-width: 1024px) 32rem, 40rem"
+            className="object-contain object-center"
+            priority
+          />
+        </Link>
+      </div>
+
+      {/* Категории — только главная, по центру в контейнере */}
+      {isHome ? (
+        <div className="mx-auto max-w-7xl px-4 pb-5">
+          <nav
+            className="flex justify-start gap-2 overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] md:justify-center [&::-webkit-scrollbar]:hidden"
+            aria-label="Категории меню"
+          >
+            {DEFAULT_MENU_CATEGORIES.map((category) => {
+              const isActive = activeCategory === category;
+              return (
+                <Link
+                  key={category}
+                  href={`/?category=${encodeURIComponent(category)}`}
+                  scroll={false}
+                  className={[
+                    "shrink-0 rounded-full border px-3.5 py-2 text-sm font-medium transition md:px-4",
+                    isActive
+                      ? "border-rose-500 bg-rose-500 text-white shadow-sm shadow-rose-900/30"
+                      : "border-zinc-700 bg-zinc-900/90 text-zinc-200 hover:border-rose-500/45 hover:text-white",
+                  ].join(" ")}
+                >
+                  {category}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+      ) : null}
     </header>
+  );
+}
+
+function LocationPinIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden
+    >
+      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+    </svg>
   );
 }
 
