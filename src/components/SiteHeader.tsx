@@ -61,7 +61,7 @@ export default function SiteHeader() {
           className="block h-20 w-auto max-w-full shrink-0 transition-opacity hover:opacity-90 md:h-24"
         >
           <Image
-            src="/sakura-city-logo.svg"
+            src="/sakura-city-logo.jpeg"
             alt="Sakura City"
             width={600}
             height={200}
